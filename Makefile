@@ -6,7 +6,7 @@ MAKEFLAGS += -rR
 .SUFFIXES:
 
 # Output binary name
-OUTPUT     := ../$(OUT_DIR)/proka-kernel
+OUTPUT     := ./proka-kernel
 # Cargo package name
 PKG_NAME   := proka-kernel
 # Rust target triple
@@ -35,32 +35,28 @@ RUSTFLAGS := -C relocation-model=static \
 	     -C force-frame-pointers=yes
 
 # Binary path relative to kernel directory
-BIN_PATH := ../target/$(RUST_TARGET)/$(PROFILE_DIR)/$(PKG_NAME)
+BIN_PATH := target/$(RUST_TARGET)/$(PROFILE_DIR)/$(PKG_NAME)
 
 .PHONY: all clean distclean menuconfig fmt clippy test
 
 all: $(OUTPUT)
 
 $(OUTPUT): $(BIN_PATH)
-	$(Q)cp $< $@.elf
-	objcopy -O binary $@.elf $@
+	objcopy -O binary $< $@
 	rm -f $(BIN_PATH)
 	@echo "Kernel binary ready: $@"
 
 $(BIN_PATH): .FORCE
 	@echo "Building kernel in $(PROFILE) mode..."
-	$(Q)RUSTFLAGS="$(RUSTFLAGS)" cargo anaxa build --no-env --target $(RUST_TARGET) --profile $(PROFILE)
+	$(Q)RUSTFLAGS="$(RUSTFLAGS)" cargo build --target $(RUST_TARGET) --profile $(PROFILE)
 
 clippy:
 	$(Q)RUSTFLAGS="$(RUSTFLAGS)" cargo clippy --target $(RUST_TARGET) --all-features
 
 test:
-	$(Q)RUSTFLAGS="$(RUSTFLAGS)" cargo anaxa test --lib --target $(RUST_TARGET)
+	$(Q)RUSTFLAGS="$(RUSTFLAGS)" cargo test --lib --target $(RUST_TARGET)
 
 .FORCE:
-
-menuconfig:
-	$(Q)cargo anaxa menuconfig
 
 fmt:
 	$(Q)cargo fmt
